@@ -82,9 +82,9 @@ func (l *listenerHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Pa
 		return pk, nil
 	}
 
-	l.app.Broadcast(dp)
+	log.Printf(`Inserted "%s" datapoint`, dp.Type)
 
-	// log.Printf(`Inserted "%s" datapoint`, dp.Type)
+	l.app.Broadcast(dp)
 
 	return pk, nil
 }

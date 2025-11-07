@@ -48,6 +48,7 @@ func (db *Database) GetByTypeAndTimeRange(ctx context.Context, dataType string, 
 		filter["type"] = dataType
 	}
 
+	// opts := options.Find().SetLimit(60)
 	cursor, err := collection.Find(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("Database GetByTypeAndTimeRange Find error: %w", err)

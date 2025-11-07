@@ -110,8 +110,6 @@ func (a *App) sseHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("sseHandler GetByTypeAndTimeRange error: %v", err)
 	}
 
-	log.Printf("len %d", len(initialData))
-
 	rc := http.NewResponseController(w)
 
 	if len(initialData) > 0 {
@@ -144,7 +142,7 @@ func (a *App) sseHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			_, err = fmt.Fprintf(w, "%s\n\n", data)
+			_, err = fmt.Fprintf(w, "data: %s\n\n", data)
 			if err != nil {
 				return
 			}
@@ -175,6 +173,8 @@ func (r *HistoricalDataResponse) ToJSON() string {
 }
 
 func (a *App) historicalDataHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	// Parse query parameters
 	query := r.URL.Query()
 	dataType := query.Get("type")

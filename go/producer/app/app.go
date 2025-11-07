@@ -63,7 +63,7 @@ func (a *App) Run(ctx context.Context) error {
 				if token.Error() != nil {
 					log.Printf("app Run publish error: %v", token.Error())
 				} else {
-					// log.Printf("Published: %s", json)
+					log.Printf("Published: %s", json)
 				}
 			}
 		}
@@ -143,6 +143,7 @@ func produceTemperature(ctx context.Context, ch chan<- *models.DataPoint) {
 	}
 }
 
+// Simulate a slowly increasing hydrogen production rate between 10 and 20
 func produceHydrogenProductionRate(ctx context.Context, ch chan<- *models.DataPoint) {
 	ticker := newRandomTicker()
 	defer ticker.Stop()
