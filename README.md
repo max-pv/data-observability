@@ -40,5 +40,5 @@ docker compose up --build frontend
 Technically, instead of SSE and MQTT, WebSockets could have used for both pushing the events from the producer to the backend and from the backend to the frontend. However, SSE and MQTT were chosen not because of any technical advantage but to showcase a wider range of technologies. WebSockets would have simplified the architecture by using a single protocol for both communication channels.
 
 ### Frontend
-- React with Typescript: Chosen because it was required by the problem statement. Also, React is a popular library for building user interfaces, and Typescript adds type safety to JavaScript.
+- React with Typescript: React is a popular library for building user interfaces, and Typescript adds type safety to JavaScript.
 - Recharts: Selected for its simplicity and ease of integration with React for creating charts and visual
