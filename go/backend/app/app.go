@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/max-pv/fourier/go-shared/models"
 )
@@ -15,17 +17,22 @@ const (
 
 type Storage interface {
 	InsertDataPoint(ctx context.Context, dp *models.DataPoint) error
+	GetByTypeAndTimeRange(ctx context.Context, dataType string, start, end time.Time) ([]*models.DataPoint, error)
 }
 
 type App struct {
 	httpReady atomic.Bool
 	mqttReady atomic.Bool
 
-	db Storage
+	db      Storage
+	clients map[chan *models.DataPoint]struct{}
+	mu      sync.Mutex
 }
 
 func New() *App {
-	return &App{}
+	return &App{
+		clients: make(map[chan *models.DataPoint]struct{}),
+	}
 }
 
 func (a *App) Run(ctx context.Context) error {
@@ -55,4 +62,18 @@ func (a *App) Run(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (a *App) Broadcast(dataPoint *models.DataPoint) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	for clientChan := range a.clients {
+		select {
+		case clientChan <- dataPoint:
+		default:
+			// If the client is not ready to receive, skip it
+			log.Println("Skipping client due to slow connection")
+		}
+	}
 }

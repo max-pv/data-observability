@@ -63,7 +63,7 @@ func (a *App) Run(ctx context.Context) error {
 				if token.Error() != nil {
 					log.Printf("app Run publish error: %v", token.Error())
 				} else {
-					log.Printf("Published: %s", json)
+					// log.Printf("Published: %s", json)
 				}
 			}
 		}

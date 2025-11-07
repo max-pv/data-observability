@@ -15,17 +15,21 @@ import (
 	hooks "github.com/mochi-mqtt/server/v2/hooks/auth"
 )
 
+type MQTTServer struct {
+	Ready bool
+}
+
 type listenerHook struct {
 	server.HookBase
 
-	db Storage
+	app *App
 }
 
 func (a *App) startMQTTServer(ctx context.Context) error {
 	s := server.New(nil)
 
 	s.AddHook(&hooks.AllowHook{}, nil)
-	s.AddHook(&listenerHook{db: a.db}, nil)
+	s.AddHook(&listenerHook{app: a}, nil)
 
 	tcp := listeners.NewTCP(listeners.Config{ID: "t1", Address: ":1883"})
 
@@ -73,13 +77,15 @@ func (l *listenerHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Pa
 		return pk, nil
 	}
 
-	err = l.db.InsertDataPoint(context.Background(), dp)
+	err = l.app.db.InsertDataPoint(context.Background(), dp)
 	if err != nil {
 		log.Printf("app OnPublish InsertOne error: %v", err)
 		return pk, nil
 	}
 
-	log.Printf(`Inserted "%s" datapoint`, dp.Type)
+	l.app.Broadcast(dp)
+
+	// log.Printf(`Inserted "%s" datapoint`, dp.Type)
 
 	return pk, nil
 }

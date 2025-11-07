@@ -2,15 +2,28 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/max-pv/fourier/go-shared/models"
 )
+
+const (
+	typeInitialData = "initial_data"
+	typeUpdateData  = "update_data"
+)
+
+type SSEPayload struct {
+	Kind    string              `json:"kind"`
+	Payload []*models.DataPoint `json:"payload"`
+}
 
 func (a *App) startHTTPServer(ctx context.Context) error {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/events", sseHandler)
+	mux.HandleFunc("/events", a.sseHandler)
 	mux.HandleFunc("/health", a.healthHandler)
 
 	srv := &http.Server{
@@ -40,7 +53,7 @@ func (a *App) startHTTPServer(ctx context.Context) error {
 
 func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
 	if a.httpReady.Load() && a.mqttReady.Load() {
-		log.Println("Health check OK")
+		// log.Println("Health check OK")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 		return
@@ -51,7 +64,7 @@ func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Service Unavailable"))
 }
 
-func sseHandler(w http.ResponseWriter, r *http.Request) {
+func (a *App) sseHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client connected to SSE")
 
 	// Set http headers required for SSE
@@ -62,27 +75,78 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 	// You may need this locally for CORS requests
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	// Create a channel for this client
+	clientChan := make(chan *models.DataPoint)
+	a.mu.Lock()
+	a.clients[clientChan] = struct{}{}
+	a.mu.Unlock()
+
+	// Remove the client when they disconnect
+	defer func() {
+		a.mu.Lock()
+		delete(a.clients, clientChan)
+		a.mu.Unlock()
+		close(clientChan)
+		log.Println("Client disconnected")
+	}()
+
+	// Parse query parameters
+	query := r.URL.Query()
+	dataType := query.Get("type") // Get the "type" parameter
+	if dataType == "" {
+		dataType = typeEverything
+	}
+
+	log.Printf("Fetching initial data with type: %s, start: %s, end: %s", dataType, time.Now().Add(-1*time.Hour), time.Now())
+
 	// Create a channel for client disconnection
-	clientGone := r.Context().Done()
+	initialData, err := a.db.GetByTypeAndTimeRange(r.Context(), dataType, time.Now().Add(-1*time.Hour), time.Now())
+	if err != nil {
+		log.Printf("sseHandler GetByTypeAndTimeRange error: %v", err)
+	}
+
+	log.Printf("len %d", len(initialData))
 
 	rc := http.NewResponseController(w)
-	t := time.NewTicker(time.Second)
-	defer t.Stop()
+
+	if len(initialData) > 0 {
+		payload := SSEPayload{
+			Kind:    typeInitialData,
+			Payload: initialData,
+		}
+		data, err := json.Marshal(payload)
+		if err == nil {
+			fmt.Fprintf(w, "data: %s\n\n", data)
+			if err := rc.Flush(); err != nil {
+				log.Printf("sseHandler rc.Flush error: %v", err)
+				return
+			}
+		}
+	}
+
 	for {
 		select {
-		case <-clientGone:
-			log.Println("Client disconnected")
+		case <-r.Context().Done():
 			return
-		case <-t.C:
-			// Send an event to the client
-			// Here we send only the "data" field, but there are few others
-			_, err := fmt.Fprintf(w, "data: The time is %s\n\n", time.Now().Format(time.UnixDate))
+		case msg := <-clientChan:
+			payload := SSEPayload{
+				Kind:    typeUpdateData,
+				Payload: []*models.DataPoint{msg},
+			}
+			data, err := json.Marshal(payload)
+			if err != nil {
+				log.Printf("sseHandler json.Marshal error: %v", err)
+				return
+			}
+
+			_, err = fmt.Fprintf(w, "%s\n\n", data)
 			if err != nil {
 				return
 			}
-			err = rc.Flush()
-			if err != nil {
-				return
+
+			flusher, ok := w.(http.Flusher)
+			if ok {
+				flusher.Flush()
 			}
 		}
 	}
