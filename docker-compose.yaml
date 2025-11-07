@@ -1,0 +1,66 @@
+services:
+  mongo:
+    image: mongo
+    restart: always
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 2s
+      timeout: 10s
+      retries: 5
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+    command: 
+      mongod --quiet --logpath /dev/null
+
+  # Backend Service
+  backend:
+    build:
+      context: ./go
+      dockerfile: Dockerfile.backend
+    container_name: backend
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 2s
+      timeout: 10s
+      retries: 5
+    ports:
+      - "8080:8080" # SSE and REST API
+      - "1883:1883" # MQTT broker
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://root:example@mongo:27017
+
+  # Producer Service
+  producer:
+    build:
+      context: ./go
+      dockerfile: Dockerfile.producer
+    container_name: producer
+    depends_on:
+      backend:
+        condition: service_healthy
+      # - backend
+    environment:
+      MQTT_BROKER: tcp://backend:1883
+
+  # Frontend Service
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: frontend
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #   environment:
+  #     REACT_APP_BACKEND_URL: http://backend:8080
+  #   volumes:
+  #     - ./frontend:/app

@@ -1,0 +1,29 @@
+# Use the official Golang image to build the backend
+FROM golang:1.25 AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the rest of the application code
+COPY . .
+
+WORKDIR /app/backend
+
+# Build the backend binary
+RUN CGO_ENABLED=0 go build -o backend .
+
+# Use Alpine to have shell and curl for healthchecks
+FROM alpine:3.18
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Copy the built binary from the builder stage
+COPY --from=builder /app/backend .
+
+
+# Command to run the backend
+CMD ["/app/backend"]

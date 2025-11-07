@@ -1,0 +1,8 @@
+{
+  "go.goroot": "/home/maxap/.local/share/mise/installs/go/1.25.0",
+  "go.alternateTools": {
+    "go": "/home/maxap/.local/share/mise/shims/go",
+    "dlv": "/home/maxap/.local/share/mise/shims/dlv",
+    "gopls": "/home/maxap/.local/share/mise/shims/gopls"
+  }
+}

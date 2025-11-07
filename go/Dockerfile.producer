@@ -1,0 +1,25 @@
+# Use the official Golang image to build the backend
+FROM golang:1.25 AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the rest of the application code
+COPY . .
+
+WORKDIR /app/producer
+
+# Build the producer binary
+RUN CGO_ENABLED=0 go build -o producer .
+
+# Use a minimal image for the final container
+FROM gcr.io/distroless/base-debian11
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the built binary from the builder stage
+COPY --from=builder /app/producer .
+
+# Command to run the producer
+CMD ["/app/producer"]
