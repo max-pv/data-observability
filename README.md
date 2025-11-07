@@ -12,13 +12,15 @@ docker compose up --build
 
 After that, open your web browser and go to `http://localhost:3000` to access the dashboard.
 
+## Overview
+
 It consists of 3 components:
 
 1. Event producer (Golang, MQTT)
 2. Backend (Golang, MongoDB with timeseries collections, Server-Sent Events (SSE))
 3. Frontend (React with Typescript, Recharts)
 
-## Features
+### Features
 
 - Displays a live plot of multiple telemetry signals
 - Connects to the backend's SSE endpoint for real-time updates
@@ -29,6 +31,7 @@ It consists of 3 components:
 - No authentication or authorization mechanisms are implemented.
 - The UI is kept minimalistic without advanced styling or responsiveness.
 - Error handling and edge cases are not thoroughly addressed.
+- The code is structured for simplicity and clarity rather than scalability or maintainability.
 
 ## Reasoning for technology choices:
 
