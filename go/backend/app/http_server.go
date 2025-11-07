@@ -11,20 +11,13 @@ import (
 	"github.com/max-pv/fourier/go-shared/models"
 )
 
-const (
-	typeInitialData = "initial_data"
-	typeUpdateData  = "update_data"
-)
-
-type SSEPayload struct {
-	Kind    string              `json:"kind"`
-	Payload []*models.DataPoint `json:"payload"`
-}
+// SERVER BOOTSTRAP
 
 func (a *App) startHTTPServer(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/events", a.sseHandler)
 	mux.HandleFunc("/health", a.healthHandler)
+	mux.HandleFunc("/historical", a.historicalDataHandler)
 
 	srv := &http.Server{
 		Addr:    ":8080",
@@ -64,6 +57,18 @@ func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Service Unavailable"))
 }
 
+// SSE HANDLER
+
+const (
+	typeInitialData = "initial_data"
+	typeUpdateData  = "update_data"
+)
+
+type SSEPayload struct {
+	Kind    string              `json:"kind"`
+	Payload []*models.DataPoint `json:"payload"`
+}
+
 func (a *App) sseHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client connected to SSE")
 
@@ -78,13 +83,13 @@ func (a *App) sseHandler(w http.ResponseWriter, r *http.Request) {
 	// Create a channel for this client
 	clientChan := make(chan *models.DataPoint)
 	a.mu.Lock()
-	a.clients[clientChan] = struct{}{}
+	a.sseClients[clientChan] = struct{}{}
 	a.mu.Unlock()
 
 	// Remove the client when they disconnect
 	defer func() {
 		a.mu.Lock()
-		delete(a.clients, clientChan)
+		delete(a.sseClients, clientChan)
 		a.mu.Unlock()
 		close(clientChan)
 		log.Println("Client disconnected")
@@ -149,5 +154,62 @@ func (a *App) sseHandler(w http.ResponseWriter, r *http.Request) {
 				flusher.Flush()
 			}
 		}
+	}
+}
+
+// HISTORICAL DATA HANDLER
+
+type HistoricalDataResponse struct {
+	Data  []*models.DataPoint `json:"data,omitempty"`
+	Error string              `json:"error,omitempty"`
+}
+
+func (r *HistoricalDataResponse) ToJSON() string {
+	output, err := json.Marshal(r)
+	if err != nil {
+		log.Printf("HistoricalDataResponse ToJSON marshal error: %v", err)
+		return `{"error":"internal error"}`
+	}
+
+	return string(output)
+}
+
+func (a *App) historicalDataHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters
+	query := r.URL.Query()
+	dataType := query.Get("type")
+	startStr := query.Get("start")
+	endStr := query.Get("end")
+
+	// Validate and parse the time range
+	start, err := time.Parse(time.RFC3339, startStr)
+	if err != nil {
+		resp := &HistoricalDataResponse{Error: "invalid 'start' parameter"}
+		http.Error(w, resp.ToJSON(), http.StatusBadRequest)
+		return
+	}
+	end, err := time.Parse(time.RFC3339, endStr)
+	if err != nil {
+		resp := &HistoricalDataResponse{Error: "invalid 'end' parameter"}
+		http.Error(w, resp.ToJSON(), http.StatusBadRequest)
+		return
+	}
+
+	// Query the database
+	data, err := a.db.GetByTypeAndTimeRange(r.Context(), dataType, start, end)
+	if err != nil {
+		log.Printf("historicalDataHandler GetByTypeAndTimeRange error: %v", err)
+		resp := &HistoricalDataResponse{Error: "can not fetch data"}
+		http.Error(w, resp.ToJSON(), http.StatusInternalServerError)
+		return
+	}
+
+	// Serialize the data to JSON
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		log.Printf("historicalDataHandler JSON encoding error: %v", err)
+		resp := &HistoricalDataResponse{Error: "failed to encode data"}
+		http.Error(w, resp.ToJSON(), http.StatusInternalServerError)
+		return
 	}
 }

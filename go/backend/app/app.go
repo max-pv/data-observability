@@ -24,14 +24,14 @@ type App struct {
 	httpReady atomic.Bool
 	mqttReady atomic.Bool
 
-	db      Storage
-	clients map[chan *models.DataPoint]struct{}
-	mu      sync.Mutex
+	db         Storage
+	sseClients map[chan *models.DataPoint]struct{}
+	mu         sync.Mutex
 }
 
 func New() *App {
 	return &App{
-		clients: make(map[chan *models.DataPoint]struct{}),
+		sseClients: make(map[chan *models.DataPoint]struct{}),
 	}
 }
 
@@ -68,7 +68,7 @@ func (a *App) Broadcast(dataPoint *models.DataPoint) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	for clientChan := range a.clients {
+	for clientChan := range a.sseClients {
 		select {
 		case clientChan <- dataPoint:
 		default:

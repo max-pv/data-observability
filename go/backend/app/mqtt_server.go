@@ -11,7 +11,6 @@ import (
 	"github.com/mochi-mqtt/server/v2/packets"
 
 	mqtt "github.com/mochi-mqtt/server/v2"
-	server "github.com/mochi-mqtt/server/v2"
 	hooks "github.com/mochi-mqtt/server/v2/hooks/auth"
 )
 
@@ -20,13 +19,13 @@ type MQTTServer struct {
 }
 
 type listenerHook struct {
-	server.HookBase
+	mqtt.HookBase
 
 	app *App
 }
 
 func (a *App) startMQTTServer(ctx context.Context) error {
-	s := server.New(nil)
+	s := mqtt.New(nil)
 
 	s.AddHook(&hooks.AllowHook{}, nil)
 	s.AddHook(&listenerHook{app: a}, nil)
