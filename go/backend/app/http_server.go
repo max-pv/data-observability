@@ -37,7 +37,9 @@ func (a *App) startHTTPServer(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		log.Println("HTTP server shutting down")
-		srv.Shutdown(ctx)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		srv.Shutdown(shutdownCtx)
 		return nil
 	case err := <-errCh:
 		return fmt.Errorf("app startHTTPServer error: %w", err)

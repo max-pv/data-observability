@@ -14,10 +14,6 @@ import (
 	hooks "github.com/mochi-mqtt/server/v2/hooks/auth"
 )
 
-type MQTTServer struct {
-	Ready bool
-}
-
 type listenerHook struct {
 	mqtt.HookBase
 
@@ -80,6 +76,7 @@ func (l *listenerHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Pa
 	l.app.Broadcast(dp)
 
 	// Run DB insertion in a separate goroutine to avoid blocking the MQTT server
+	// not going to handle insertion errors here, just log them - in the real world dropping events should not trigger system failures
 	go func() {
 		err = l.app.db.InsertDataPoint(context.Background(), dp)
 		if err != nil {
