@@ -1,4 +1,4 @@
-module github.com/max-pv/fourier/backend
+module github.com/max-pv/data-observability/backend
 
 go 1.25.0
 

@@ -2,6 +2,16 @@
 
 This is the frontend component of a tiny data-observability application. It is built using React with Typescript and utilizes Recharts for data visualization.
 
+## Running
+
+To run the frontend, ensure that you have Docker and Docker Compose installed. Then, navigate to the project directory and execute the following command:
+
+```bash
+docker compose up --build
+```
+
+After that, open your web browser and go to `http://localhost:3000` to access the dashboard.
+
 It consists of 3 components:
 
 1. Event producer (Golang, MQTT)
@@ -13,14 +23,6 @@ It consists of 3 components:
 - Displays a live plot of multiple telemetry signals
 - Connects to the backend's SSE endpoint for real-time updates
 - Provides a form to query historical data for the last hour, showing raw data and statistical summaries (min, max, average, 95 percentile)
-
-## Running
-
-To run the frontend, ensure that you have Docker and Docker Compose installed. Then, navigate to the project directory and execute the following command:
-
-```bash
-docker compose up --build frontend
-```
 
 ## Shortcuts taken
 

@@ -1,6 +1,6 @@
 print("Starting mongo-init.js script...");
 
-db = db.getSiblingDB("fourier"); // Replace with your database name
+db = db.getSiblingDB("data-observability"); // Replace with your database name
 
 // timeseries helps optimize storage and queries for time-based data
 db.createCollection("telemetry", {

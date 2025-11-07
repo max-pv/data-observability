@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/max-pv/fourier/backend/app"
+	"github.com/max-pv/data-observability/backend/app"
 )
 
 func main() {

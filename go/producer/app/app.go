@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/max-pv/fourier/go-shared/models"
+	"github.com/max-pv/data-observability/go-shared/models"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )

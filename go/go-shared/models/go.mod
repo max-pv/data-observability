@@ -1,3 +1,3 @@
-module github.com/max-pv/fourier/go-shared/models
+module github.com/max-pv/data-observability/go-shared/models
 
 go 1.25.0

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/max-pv/fourier/go-shared/models"
+	"github.com/max-pv/data-observability/go-shared/models"
 	"github.com/mochi-mqtt/server/v2/listeners"
 	"github.com/mochi-mqtt/server/v2/packets"
 

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/max-pv/fourier/go-shared/models"
+	"github.com/max-pv/data-observability/go-shared/models"
 )
 
 // SERVER BOOTSTRAP

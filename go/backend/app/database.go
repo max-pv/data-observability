@@ -6,13 +6,13 @@ import (
 	"log"
 	"time"
 
-	"github.com/max-pv/fourier/go-shared/models"
+	"github.com/max-pv/data-observability/go-shared/models"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
-	dbName         = "fourier"
+	dbName         = "data-observability"
 	collectionName = "telemetry"
 	typeEverything = "*"
 )

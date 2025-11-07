@@ -1,4 +1,4 @@
-module github.com/max-pv/fourier/producer
+module github.com/max-pv/data-observability/producer
 
 go 1.25.0
 
