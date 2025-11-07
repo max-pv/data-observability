@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { connectToSSE } from "../services/sse";
-import { DataPoint, DATA_TYPES, DATA_TYPE_LABELS, DATA_TYPE_COLORS, SSEPayload } from "../types/DataPoint";
+import { DataPoint, DATA_TYPES, DATA_TYPE_LABELS, DATA_TYPE_COLORS } from "../types/DataPoint";
 import Chart from "../components/Chart";
 
 const MAX_DATA_POINTS = 60; // Keep last 60 data points per chart

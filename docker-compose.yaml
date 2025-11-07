@@ -46,21 +46,17 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      # - backend
     environment:
       MQTT_BROKER: tcp://backend:1883
 
   # Frontend Service
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: frontend
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - backend
-  #   environment:
-  #     REACT_APP_BACKEND_URL: http://backend:8080
-  #   volumes:
-  #     - ./frontend:/app
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
