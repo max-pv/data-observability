@@ -25,6 +25,7 @@ It consists of 3 components:
 - Displays a live plot of multiple telemetry signals
 - Connects to the backend's SSE endpoint for real-time updates
 - Provides a form to query historical data for the last hour, showing raw data and statistical summaries (min, max, average, 95 percentile)
+- **Important**: the frontend does not poll the database directly; it relies on the backend to provide data via SSE. Events are pushed from the event producer to the client through the backend, and the client does not make queries to the DB to fetch data for the charts.
 
 ## Shortcuts taken
 
