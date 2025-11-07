@@ -76,15 +76,17 @@ func (l *listenerHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Pa
 		return pk, nil
 	}
 
-	err = l.app.db.InsertDataPoint(context.Background(), dp)
-	if err != nil {
-		log.Printf("app OnPublish InsertOne error: %v", err)
-		return pk, nil
-	}
-
-	log.Printf(`Inserted "%s" datapoint`, dp.Type)
-
+	// Broadcast to connected SSE clients
 	l.app.Broadcast(dp)
+
+	// Run DB insertion in a separate goroutine to avoid blocking the MQTT server
+	go func() {
+		err = l.app.db.InsertDataPoint(context.Background(), dp)
+		if err != nil {
+			log.Printf("app OnPublish InsertDataPoint error: %v", err)
+		}
+		log.Printf(`Inserted "%s" datapoint`, dp.Type)
+	}()
 
 	return pk, nil
 }
