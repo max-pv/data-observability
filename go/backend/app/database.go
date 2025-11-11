@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/max-pv/data-observability/go-shared/models"
@@ -72,7 +73,10 @@ func (db *Database) GetByTypeAndTimeRange(ctx context.Context, dataType string, 
 }
 
 func (a *App) connectToDatabase(ctx context.Context) error {
-	uri := "mongodb://root:example@mongo:27017"
+	uri := os.Getenv("MONGO_URI")
+	if uri == "" {
+		return fmt.Errorf("app connectToDatabase MONGO_URI not set")
+	}
 
 	clientOptions := options.Client().ApplyURI(uri)
 
@@ -87,7 +91,6 @@ func (a *App) connectToDatabase(ctx context.Context) error {
 		return fmt.Errorf("app connectToDatabase client.Ping error: %w", err)
 	}
 
-	// a.db = client.Database(dbName)
 	a.db = NewDatabase(client)
 	log.Println("Connected to MongoDB")
 

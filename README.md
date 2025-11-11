@@ -1,10 +1,10 @@
 # Data Observability Frontend
 
-This is the frontend component of a tiny data-observability application. It is built using React with Typescript and utilizes Recharts for data visualization.
+This is a tiny data-observability application. It provides a dashboard to visualize telemetry signals in real-time and query historical data.
 
 ## Running
 
-To run the frontend, ensure that you have Docker and Docker Compose installed. Then, navigate to the project directory and execute the following command:
+To run the app, ensure that you have Docker and Docker Compose installed. Then, navigate to the project directory and execute the following command:
 
 ```bash
 docker compose up --build

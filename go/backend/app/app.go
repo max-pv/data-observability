@@ -72,7 +72,7 @@ func (a *App) Broadcast(dataPoint *models.DataPoint) {
 		select {
 		case clientChan <- dataPoint:
 		default:
-			// If the client is not ready to receive, skip it
+			// Client's channel is full (e.g. slow), skip them
 			log.Println("Skipping client due to slow connection")
 		}
 	}
